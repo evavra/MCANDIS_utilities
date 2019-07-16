@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import datetime as dt
 import numpy as np
 import new_baseline_table
@@ -22,7 +23,7 @@ def prepMCANDIS(input_list, input_table):
     #   Returned to command line as newList
     # baseline.dat - two column version of baseline_table.dat with only dates and perpendicular baseline
     #   Returned to command line as newTable
-    rename(input_list)
+    rename_intf_list(input_list)
     newList = make_dates_to_use(input_list)
     newTable = make_baseline_info(input_table)
 
@@ -35,13 +36,8 @@ def runMCANDIS(input_list, input_table):
     #
 
 
-# ---------------------------- INPUTS ----------------------------
-def rename_intf_list(input_list):
-    print()
-    subprocess.call(['cp', input_list, 'dates.run'], shell=False)
-    print('Copied ' + input_list + ' to dates.run')
+# ---------------------------- UTILITY FUNCTIONS ----------------------------
 
-    print()
 
 def make_dates_to_use(input_list):
 
@@ -86,7 +82,6 @@ def make_dates_to_use(input_list):
     return newList
 
 
-
 def make_baseline_info(input_table):
     # Load baseline_table.dat
     print('Reading in table...')
@@ -106,9 +101,53 @@ def make_baseline_info(input_table):
     return newTable
 
 
+def rename_intfs(input_list):
+    # Input:
+    #   input_list - GMTSAR formatted (YYYYDDD) interferogram directory list
+    # Output:
+    #   dates.run - Interferogram directory list renamed with MCANDIS format (YYYYMMDD)
+    #   Also renames all directories in input_list to the corresponding name in output_list
+
+# Load dates into 'master' and 'slave' arrays
+    print('Reading in dates...')
+
+    with open(input_list, "r") as file:
+        origList = file.readlines()
+
+    master = []
+    slave = []
+
+    print()
+    print('New filenames:')
+
+    for line in origList:
+        master.append(dt.datetime.strptime(line[0:7],"%Y%j"))
+        slave.append(dt.datetime.strptime(line[8:15],"%Y%j"))
+        print(master[-1].strftime("%Y%j") + '_' + slave[-1].strftime("%Y%j"))
+
+
+# Use original input_list to write list in new format
+    with open('dates.run', 'w') as newfile:
+        for i in range(len(master)):
+            newfile.write(master[i].strftime("%Y%m%d") + '_' + slave[i].strftime("%Y%m%d") + '\n')
+            output_list.append(master[i].strftime("%Y%m%d") + '_' + slave[i].strftime("%Y%m%d"))\
+
+        print()
+        print('File written:')
+        print(newfile)
+
+# Use old and new lists to rename interferogram directories
+
+    for i in range(len(input_list)):
+        subprocess.call(['mv', input_list[i], output_list[i]], shell=False)
+        print('Renamed ' + input_list[i] + ' to ' + output_list[i])
+
+
+    return output_list
+
+
 
 if __name__ == "__main__":
-
     prepMCANDIS('Sp2017_Sp2018_intf.in', 'baseline_table.dat')
 
 
