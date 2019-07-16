@@ -11,11 +11,11 @@ import os, sys
 
 # ---------------------------- DRIVERS ----------------------------
 
-def prepMCANDIS(input_list, input_table):
+def prepMCANDIS(intf_in, baseline_table):
 
     # Run in directory above interferograms
     # Inputs:
-    # input_list - list of interferograms to be used in common scene stacking
+    # intf_in - list of interferograms to be used in common scene stacking
     # input_table - baseline_table.dat for scenes used in processing
 
     # Outputs:
@@ -24,25 +24,26 @@ def prepMCANDIS(input_list, input_table):
     #   Returned to command line as newList
     # baseline.dat - two column version of baseline_table.dat with only dates and perpendicular baseline
     #   Returned to command line as newTable
-    newList = make_dates_to_use(input_list)
-    newTable = make_baseline_info(input_table)
+
+    newList = make_dates_to_use(intf_in)
+    newTable = make_baseline_info(baseline_table)
 
 
-def runMCANDIS(input_list, input_table):
+def runMCANDIS(intf_in, baseline_table):
 
     # Prep input files
-    prepMCANDIS(input_list, input_table)
+    prepMCANDIS(intf_in, baseline_table)
 
 
 
 # ---------------------------- UTILITY FUNCTIONS ----------------------------
 
-def make_dates_to_use(input_list):
+def make_dates_to_use(intf_in):
 
 # Load dates into 'master' and 'slave' arrays
     print('Reading in dates...')
 
-    with open(input_list, "r") as file:
+    with open(intf_in, "r") as file:
         origList = file.readlines()
 
     master = []
@@ -80,11 +81,11 @@ def make_dates_to_use(input_list):
     return newList
 
 
-def make_baseline_info(input_table):
+def make_baseline_info(baseline_table):
     # Load baseline_table.dat
     print('Reading in table...')
 
-    orbit, dates, jday, blpara, blperp, datelabels = new_baseline_table.readBaselineTable(input_table)
+    orbit, dates, jday, blpara, blperp, datelabels = new_baseline_table.readBaselineTable(baseline_table)
 
     print(datelabels)
 
