@@ -39,25 +39,45 @@ def runMCANDIS(intf_in, baseline_table):
 
 # ---------------------------- UTILITY FUNCTIONS ----------------------------
 
-def make_dates_to_use(intf_in):
+def make_dates_to_use(intf_in, code):
 
 # Load dates into 'master' and 'slave' arrays
     print('Reading in dates...')
 
     with open(intf_in, "r") as file:
         origList = file.readlines()
-
+    
+    input_list = []
     master = []
     slave = []
 
     print()
     print('Masters: Slaves:')
 
-    for line in origList:
-        master.append(dt.datetime.strptime(line[0:7],"%Y%j"))
-        slave.append(dt.datetime.strptime(line[8:15],"%Y%j"))
+    if code == 1: # Starting from intf.in
+        for line in origList:
+            # DONT use datetime because GMTSAR doesnt use real julian day convention
+            input_list.append(line[0:15])
+            # Find SLCs in each directory - they have the full YYYYMMDD dates that we want.
+            print('Searching: ' + line[0:15] + "/*SLC")
+            SLCs = glob.glob(line[0:15] + "/*SLC")
+            print(SLCs)
+            # Add their dates to the master and slave image lists
+            master.append(SLCs[0][19:27])
+            slave.append(SLCs[1][19:27] )
+            print(master[-1] + '_' + slave[-1])
 
-        print(master[-1].strftime("%Y%j") + '  ' + slave[-1].strftime("%Y%j"))
+    elif code == 2: # Directories have already been renamed, so use dates.run instead of intf.in
+        for line in origList:
+            # DONT use datetime because GMTSAR doesnt use real julian day convention
+            input_list.append(line[0:17])
+            # Find SLCs in each directory - they have the full YYYYMMDD dates that we want.
+            print('Searching: ' + line[0:17] + "/*SLC")
+            SLCs = glob.glob(line[0:17] + "/*SLC")
+            print(SLCs)
+            # Add their dates to the master and slave image lists
+            master.append(SLCs[0][21:29])
+            slave.append(SLCs[1][21:29] )
 
     # Now find unique dates
     all_dates = master + slave
@@ -68,12 +88,12 @@ def make_dates_to_use(intf_in):
     for date in all_dates:
         if date not in unique_dates:
             unique_dates.append(date)
-            print(date.strftime("%Y%m%d"))
+            print(date)
 
     # Write unique dates to new file "dates.dat"
     with open('dates.dat', 'w') as newList:
         for date in unique_dates:
-            newList.write('%s\n' % date.strftime("%Y%m%d"))
+            newList.write('%s\n' % date)
 
     print()
     print('File written:')
@@ -114,6 +134,7 @@ def rename_intfs(intf_in):
 
     with open(intf_in, "r") as file:
         origList = file.readlines()
+
     input_list = []
     master = []
     slave = []
@@ -123,28 +144,22 @@ def rename_intfs(intf_in):
 
     for line in origList:
         # DONT use datetime because GMTSAR doesnt use real julian day convention
-
+        input_list.append(line[0:15])
         # Find SLCs in each directory - they have the full YYYYMMDD dates that we want.
-        SLCs = glob.glob(line + "/*SLC")
+        print('Searching: ' + line[0:15] + "/*SLC")
+        SLCs = glob.glob(line[0:15] + "/*SLC")
         print(SLCs)
         # Add their dates to the master and slave image lists
-        master.append(SLCs[0][3:11])
-        slave.append(SLCs[1][3:11] )
+        master.append(SLCs[0][19:27])
+        slave.append(SLCs[1][19:27] )
         print(master[-1] + '_' + slave[-1])
-
-        # OLD
-        # input_list.append(line[0:15])
-        # master.append(dt.datetime.strptime(line[0:7],"%Y%j"))
-        # slave.append(dt.datetime.strptime(line[8:15],"%Y%j"))
-        # print(master[-1].strftime("%Y%j") + '_' + slave[-1].strftime("%Y%j"))
-
 
 # Use original input_list to write list in new format
     output_list = []
     with open('dates.run', 'w') as newfile:
         for i in range(len(master)):
-            newfile.write(master[i].strftime("%Y%m%d") + '_' + slave[i].strftime("%Y%m%d") + '\n')
-            output_list.append(master[i].strftime("%Y%m%d") + '_' + slave[i].strftime("%Y%m%d"))\
+            newfile.write(master[i]+ '_' + slave[i] + '\n')
+            output_list.append(master[i] + '_' + slave[i])
 
         print()
         print('File written:')
@@ -163,6 +178,6 @@ def rename_intfs(intf_in):
 
 
 if __name__ == "__main__":
-    rename_intfs('intf.in')
-
+    #rename_intfs('intf.in')
+    make_dates_to_use('dates.run', 2)
 
