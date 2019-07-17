@@ -4,6 +4,7 @@ import numpy as np
 import new_baseline_table
 import subprocess
 import os, sys
+import glob
 
 # Utility functions for running MCANDIS
 # Ellis Vavra, July 15, 2019
@@ -121,10 +122,21 @@ def rename_intfs(intf_in):
     print('New filenames:')
 
     for line in origList:
-        input_list.append(line[0:15])
-        master.append(dt.datetime.strptime(line[0:7],"%Y%j"))
-        slave.append(dt.datetime.strptime(line[8:15],"%Y%j"))
-        print(master[-1].strftime("%Y%j") + '_' + slave[-1].strftime("%Y%j"))
+        # DONT use datetime because GMTSAR doesnt use real julian day convention
+
+        # Find SLCs in each directory - they have the full YYYYMMDD dates that we want.
+        SLCs = glob.glob(line + "/*SLC")
+        print(SLCs)
+        # Add their dates to the master and slave image lists
+        master.append(SLCs[0][3:11])
+        slave.append(SLCs[1][3:11] )
+        print(master[-1] + '_' + slave[-1])
+
+        # OLD
+        # input_list.append(line[0:15])
+        # master.append(dt.datetime.strptime(line[0:7],"%Y%j"))
+        # slave.append(dt.datetime.strptime(line[8:15],"%Y%j"))
+        # print(master[-1].strftime("%Y%j") + '_' + slave[-1].strftime("%Y%j"))
 
 
 # Use original input_list to write list in new format
